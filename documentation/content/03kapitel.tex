@@ -1,0 +1,15 @@
+\chapter{Component Description} \label{ch:ComponentDescription}
+
+\chapter{Node} \label{ch:Node}
+Each node in the system will check on startup if there are other nodes already running within the network. This is done via a broadcast message containing the nodes ID and IP Address. 
+
+\section{Leader} \label{sec:Leader}
+We use the bully algorithm to determine a uniqe leader out of all nodes.
+The bully algorithm ensures that there is always a leader.
+
+The leader mostly behaves the same as all the other nodes. Additional tasks are maintaining the group-view and coordinating write operations.
+
+The group view is maintained by listening on broadcasts for new nodes and regularly checking if nodes in the group-view are still alive. The leader will accept the new server and distribute the updated group-view to all nodes. 
+
+As consistency is of high importance for the inventory system write operations are coordinated by the leader to ensure that all nodes have up-to-date information. 
+
