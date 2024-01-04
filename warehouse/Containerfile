@@ -1,0 +1,22 @@
+FROM python:3.11-alpine as BUILD
+
+WORKDIR /app
+
+COPY requirements.txt /app/
+
+RUN pip install --no-cache-dir -r requirements.txt
+
+FROM python:3.11-alpine as PROD
+
+COPY --from=BUILD  /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
+COPY --from=BUILD /usr/local/bin /usr/local/bin
+
+WORKDIR /app/
+
+COPY . /app/
+
+EXPOSE 8082
+
+RUN python manage.py makemigrations && python manage.py migrate
+
+ENTRYPOINT ["python", "manage.py", "runserver", "0.0.0.0:8082"]

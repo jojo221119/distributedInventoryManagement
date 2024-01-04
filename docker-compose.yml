@@ -1,0 +1,16 @@
+version: "3"
+
+services:
+  warehouse:
+    container_name: "warehouse"
+    ports:
+     - "8082:8082"
+    restart: unless-stopped
+    build: 
+      context: ./warehouse
+      dockerfile: Containerfile
+    networks:
+      - warehouse-network
+
+networks:
+  warehouse-network:
