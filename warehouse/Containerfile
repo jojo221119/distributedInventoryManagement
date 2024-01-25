@@ -15,8 +15,6 @@ WORKDIR /app/
 
 COPY . /app/
 
-EXPOSE 8082
+EXPOSE ${PORT}
 
-RUN python manage.py makemigrations && python manage.py migrate
-
-ENTRYPOINT ["python", "manage.py", "runserver", "0.0.0.0:8082"]
+ENTRYPOINT ["python"]
