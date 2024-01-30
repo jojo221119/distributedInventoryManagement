@@ -118,8 +118,8 @@ class ReliableMulticaster:
     def __receiveAcknowledge(self, message):
         if self.log.messageInLog(message):
             ackCount = self.log.acknowledgeMessage(message)
-            logging.debug(f"AckCount {ackCount}, Quorum {int(self.groupSize / 2) + 1} reached {ackCount >= (int(self.groupSize / 2) + 1)}")
-            if ackCount >= int(self.groupSize / 2) + 1:
+            logging.debug(f"AckCount {ackCount}, Quorum {int(self.groupSize)} reached {ackCount >= (int(self.groupSize))}")
+            if ackCount >= int(self.groupSize):
                 self.__sendCommit(message["seq"])
                 if not self.log.isMessageCommited(message):
                     self.__commitMessageAndForwardContent(message)
