@@ -8,6 +8,8 @@ RUN apk update && apk add python3-dev \
                         libc-dev \
                         linux-headers 
 
+RUN apk add --no-cache build-base python3-dev g++ libffi-dev openssl-dev
+
 RUN pip install --no-cache-dir -r requirements.txt
 
 FROM python:3.11-alpine as PROD
