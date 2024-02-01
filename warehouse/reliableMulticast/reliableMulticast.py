@@ -76,6 +76,8 @@ class ReliableMulticaster:
             elif message["type"] == "message":
                 self.__receiveMessage(message)
             
+            elif message["type"] == "abort":
+                self.__receiveAbort(message)
 
 
     def sendMessage(self, content):
@@ -84,6 +86,22 @@ class ReliableMulticaster:
         self.log.addMessage(m)
         self.log.acknowledgeMessage(m)
         self.__send_multicast_message(m)
+
+        for i in range(3):
+            sleep(5)
+            if not self.log.isMessageCommited(m):
+                if i < 2:
+                    self.__send_multicast_message(m)
+                else:
+                    m = Message(seq=self.seq, sender=myid, content="", type="abort")
+                    self.__send_multicast_message(m)
+                    self.log.removeMessage(m)
+                    self.seq -= 1
+                    logging.debug(f"Abort message {m}")
+                return False
+            else:
+                return True
+            
     
     def __sendCommit(self, seq):
         m = Message(seq=seq, sender=myid, content="", type="commit")
@@ -125,15 +143,13 @@ class ReliableMulticaster:
                     self.__commitMessageAndForwardContent(message)
 
     def __receiveMessage(self, message):
-        if self.log.messageInLog(message):
-            return
-        else:
+        if not self.log.messageInLog(message):
             self.log.addMessage(message)
-            self.__sendAcknowledge(message["seq"])
-#            if message["seq"] == (self.seq + 1):
-#            else:
-#                logging.debug(f"Received message with high sequence number")
-#                self.__sendMissing(message["seq"])
+
+        self.__sendAcknowledge(message["seq"])
+
+    def __receiveAbort(self, message):
+        self.log.removeMessage(message)
 
     def __commitMessageAndForwardContent(self,message):
         seq = message["seq"]

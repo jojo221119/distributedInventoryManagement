@@ -1,8 +1,9 @@
 class Shared:
     def __init__(self):
         self.leader = None
-        self.hosts = []
-
+        self.hosts = {}
+        self.ip = ""
+        self.broadcastIP = ""
     def getLeader(self):
         return self.leader
     

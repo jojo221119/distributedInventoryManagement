@@ -32,3 +32,6 @@ class Log:
             return {}
     def isMessageCommited(self,message):
         return self.log[message["seq"]]["commit"]
+    
+    def removeMessage(self,message):
+        del self.log[message["seq"]]

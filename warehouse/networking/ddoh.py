@@ -1,7 +1,10 @@
+from datetime import datetime
 import pickle
+import random
 import socket
 import sys
 from time import sleep
+import time
 import netifaces
 import socket
 import threading
@@ -37,7 +40,7 @@ class Networking:
         sock.sendto(message, ("255.255.255.255", 8089))
         sock.close()
 
-        sleep(2) 
+        sleep(2)
 
     def discover_hosts(self):
         # Create a UDP socket for broadcasting
@@ -58,6 +61,7 @@ class Networking:
                 if "type" in message.keys() and message["type"] == "discovered":
                     print(f"Discovered leader at {addr[0]}:{addr[1]}")
                     broadcast_socket.close()
+                    self.sharedVar.hosts = message["hosts"] 
                     return addr[0]
 
         except socket.timeout:
@@ -66,6 +70,7 @@ class Networking:
         finally:
             broadcast_socket.close()
         
+        self.sharedVar.hosts[self.ip] = datetime.now()
         return self.ip
 
     def respond_to_discovery(self):
@@ -79,7 +84,8 @@ class Networking:
                 message = pickle.loads(data)
                 print(f"Received {message}")
                 if self.sharedVar.leader == self.ip and  "type" in message.keys() and message["type"] == "discovery":
-                    RESPONSE_MESSAGE = {'type': "discovered", 'addresse':self.ip, "foreignAdress":message["addresse"]}
+                    self.sharedVar.hosts[addr[0]] = datetime.now()
+                    RESPONSE_MESSAGE = {'type': "discovered", 'addresse':self.ip, "foreignAdress":message["addresse"], "hosts": self.sharedVar.hosts}
                     response_socket.sendto(pickle.dumps(RESPONSE_MESSAGE), addr)
 
         finally:
