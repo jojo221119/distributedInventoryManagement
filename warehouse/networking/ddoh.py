@@ -1,4 +1,3 @@
-from email import message
 import pickle
 import socket
 import sys
@@ -7,17 +6,18 @@ import netifaces
 import socket
 import threading
 
+
 DISCOVERY_PORT = 64000
 
 
 
 class Networking:
-    def __init__(self, leader):
+    def __init__(self, sharedVar):
         self.interface = socket.getaddrinfo(host=socket.gethostname(), port=None, family=socket.AF_INET)
         self.ips = self.getAllIps()
         self.broadcastIp = self.ips[0][0]["broadcast"]
         self.ip = socket.gethostbyname(socket.gethostname())
-        self.leader = leader
+        self.sharedVar = sharedVar
 
     def getAllIps(self):
         ips = []
@@ -50,20 +50,23 @@ class Networking:
             broadcast_socket.sendto(pickle.dumps(DISCOVERY_MESSAGE), (self.broadcastIp, DISCOVERY_PORT))
 
             # Listen for responses
-            broadcast_socket.settimeout(5)  # Timeout for listening (in seconds)
+            broadcast_socket.settimeout(2)  # Timeout for listening (in seconds)
             while True:
                 data, addr = broadcast_socket.recvfrom(1024)
                 message = pickle.loads(data)
-                print(f"{message}, {message.keys()}")
+                print(f"Received: {message}")
                 if "type" in message.keys() and message["type"] == "discovered":
-                    print(f"Discovered host at {addr[0]}:{addr[1]}")
+                    print(f"Discovered leader at {addr[0]}:{addr[1]}")
                     broadcast_socket.close()
-                    break
+                    return addr[0]
 
         except socket.timeout:
             print("Discovery complete or timeout reached.")
+
         finally:
             broadcast_socket.close()
+        
+        return self.ip
 
     def respond_to_discovery(self):
         # Create a UDP socket for responding to discovery messages
@@ -74,8 +77,8 @@ class Networking:
             while True:
                 data, addr = response_socket.recvfrom(1024)
                 message = pickle.loads(data)
-                print(message)
-                if self.leader and  "type" in message.keys() and message["type"] == "discovery":
+                print(f"Received {message}")
+                if self.sharedVar.leader == self.ip and  "type" in message.keys() and message["type"] == "discovery":
                     RESPONSE_MESSAGE = {'type': "discovered", 'addresse':self.ip, "foreignAdress":message["addresse"]}
                     response_socket.sendto(pickle.dumps(RESPONSE_MESSAGE), addr)
 
