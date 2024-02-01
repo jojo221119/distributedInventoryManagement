@@ -1,4 +1,4 @@
-from operator import le
+from operator import le, ne
 import queue
 import random
 import sys
@@ -7,6 +7,7 @@ from time import sleep
 import uuid
 from networking.ddoh import Networking
 from sharedVars.shared import Shared
+from heartbeat.heartbeat import HeartBeat
 
 
 
@@ -23,10 +24,19 @@ def main():
 
 
     net = Networking(sharedVar)
+    sharedVar.ip = net.ip
+    sharedVar.broadcastIP = net.broadcastIp
+    heartBeat = HeartBeat(sharedVar)
+    heartBeatListener = threading.Thread(target=heartBeat.receive)
+    heartBeatSender = threading.Thread(target=heartBeat.send_heartbeat)
+    
     response_thread = threading.Thread(target=net.respond_to_discovery)
+
+    heartBeatListener.start()
+    heartBeatSender.start()
     response_thread.start()
 
-    sleep(random.randint(0, 10))
+    sleep(random.randint(4, 15))
 
     # Discover hosts in the network
     sharedVar.leader = net.discover_hosts()
@@ -36,9 +46,10 @@ def main():
 
 
     while True:
-        print(f"Shared {sharedVar.leader}")
-        sleep(10)
-
+        print(f"Own IP: {net.ip} leader: {sharedVar.leader} hosts: {sharedVar.hosts}")
+        sleep(5)
+        #if sharedVar.leader == None:
+            
     
     response_thread.join()
 
