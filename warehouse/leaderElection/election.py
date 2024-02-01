@@ -9,8 +9,7 @@ class BullyAlgorithm:
         self.election_in_progress = False
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.ip = self.get_own_ip()
-        self.sock.bind(('127.0.0.1', 12345))
-        self.ack = []
+        self.sock.bind(('0.0.0.0', 12345))
         
 
     def start_election(self):
@@ -51,7 +50,6 @@ class BullyAlgorithm:
     
     def get_own_ip(self):
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        sock.connect(("8.8.8.8", 80))
         ip_address = sock.getsockname()[0]
         sock.close()
         return ip_address
