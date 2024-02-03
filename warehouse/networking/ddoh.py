@@ -46,7 +46,7 @@ class Networking:
         # Create a UDP socket for broadcasting
         broadcast_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         broadcast_socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-        sleep(random.randrange(3,12,3))
+        sleep(random.randrange(3,24,3))
 
         try:
             # Broadcast a discovery message
