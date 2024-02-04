@@ -15,14 +15,14 @@ class BullyAlgorithm:
             self.handle_message(data, addr)
 
     def start_election(self):
-        self.sharedVar.leader = None
+        self.sharedVar.leader = ""
         time.sleep(random.randrange(4,32,4))
         self.sharedVar.election_in_progress = True
-        if self.sharedVar.leader is None:
+        if self.sharedVar.leader == "":
             for host in self.sharedVar.hosts.keys():
                 self.send_message(host, {'type': 'election', 'addresse': self.sharedVar.ip, 'pid': self.sharedVar.pid})
             time.sleep(3)
-            if self.sharedVar.leader is None:
+            if self.sharedVar.leader == "":
                 for host in self.sharedVar.hosts.keys():
                     self.send_message(host, {'type': 'coordinator', 'addresse': self.sharedVar.ip, 'pid': self.sharedVar.pid})
                 self.sharedVar.leader = self.sharedVar.ip
@@ -42,7 +42,7 @@ class BullyAlgorithm:
             for host in self.sharedVar.hosts:
                 self.send_message(host, {'type': 'election', 'addresse': self.sharedVar.ip, 'pid': self.sharedVar.pid})
             time.sleep(3)
-            if self.sharedVar.leader is None:
+            if self.sharedVar.leader == "":
                 for host in self.sharedVar.hosts.keys():
                     self.send_message(host, {'type': 'coordinator', 'addresse': self.sharedVar.ip, 'pid': self.sharedVar.pid})
                 self.sharedVar.leader = self.sharedVar.ip

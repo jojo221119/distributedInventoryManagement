@@ -2,7 +2,7 @@ import os
 
 class Shared:
     def __init__(self):
-        self.leader = None
+        self.leader = ""
         self.hosts = {}
         self.ip = ""
         self.broadcastIP = ""
