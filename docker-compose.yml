@@ -19,13 +19,26 @@ services:
     build: 
       context: ./warehouse
       dockerfile: Containerfile
+#    command: test.py
     command: server.py
     networks:
       - warehouse-network
     stdin_open: true # docker run -i
     tty: true  
     deploy:
-      replicas: 3
+      replicas: 2
+
+  client:
+    build: 
+      context: ./warehouse
+      dockerfile: Containerfile
+    command: client.py
+    ports:
+     - "8082:8082"
+    networks:
+      - warehouse-network
+    deploy:
+      replicas: 0
 
 networks:
   warehouse-network:

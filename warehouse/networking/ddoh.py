@@ -1,4 +1,5 @@
 from datetime import datetime
+import logging
 import pickle
 import random
 import socket
@@ -33,11 +34,11 @@ class Networking:
         return ips
     
     def broadcast(self, message):
-        print(f'sending on {self.ip}')
+        logging.debug(f'sending on {self.ip}')
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_TCP)
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
         sock.bind((self.broadcastIp,0))
-        sock.sendto(message, ("255.255.255.255", 8089))
+        sock.sendto(pickle.dumps(message), ("255.255.255.255", 8089))
         sock.close()
 
         sleep(2)
@@ -58,15 +59,16 @@ class Networking:
             while True:
                 data, addr = broadcast_socket.recvfrom(1024)
                 message = pickle.loads(data)
-                print(f"Received: {message}")
+                logging.debug(f"Received: {message}")
                 if "type" in message.keys() and message["type"] == "discovered":
-                    print(f"Discovered leader at {addr[0]}:{addr[1]}")
+                    logging.debug(f"Discovered leader at {addr[0]}:{addr[1]}")
+                    broadcast_socket.settimeout(None)
                     broadcast_socket.close()
                     self.sharedVar.hosts = message["hosts"] 
                     return addr[0]
 
         except socket.timeout:
-            print("Discovery complete or timeout reached.")
+            logging.debug("Discovery complete or timeout reached.")
 
         finally:
             broadcast_socket.close()
@@ -83,11 +85,12 @@ class Networking:
             while True:
                 data, addr = response_socket.recvfrom(1024)
                 message = pickle.loads(data)
-                print(f"Received {message}")
+                logging.debug(f"Received {message}")
                 if self.sharedVar.leader == self.ip and  "type" in message.keys() and message["type"] == "discovery":
                     self.sharedVar.hosts[addr[0]] = datetime.now()
                     RESPONSE_MESSAGE = {'type': "discovered", 'addresse':self.ip, "foreignAdress":message["addresse"], "hosts": self.sharedVar.hosts}
                     response_socket.sendto(pickle.dumps(RESPONSE_MESSAGE), addr)
+
 
         finally:
             response_socket.close()

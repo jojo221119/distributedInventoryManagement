@@ -1,5 +1,6 @@
 flask
-flask_bootstrap
+bootstrap-flask
+flask_restful
 flask_wtf
 wtforms
 netifaces

@@ -1,11 +1,12 @@
+import logging
 import queue
 import uuid
 from networking.ddoh import Networking
-from reliableMulticast.reliableMulticast import ReliableMulticaster
+from warehouse.reliableMulticast.multicast import ReliableMulticaster
 
 
 def main():
-    print("hello World")
+    logging.debug("hello World")
     net = Networking()
     delivery_queue = queue.Queue()
 

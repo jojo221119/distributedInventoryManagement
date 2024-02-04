@@ -8,8 +8,8 @@ import sys
 import threading
 from time import sleep
 import platform
-from log import Log
-from message import Message
+from .log import Log
+from .message import Message
 
 # Configure the logging settings
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')

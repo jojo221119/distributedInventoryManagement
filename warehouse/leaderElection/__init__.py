@@ -1,1 +1,1 @@
-from election import BullyAlgorithm
+from leaderElection import election
