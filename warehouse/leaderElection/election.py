@@ -33,9 +33,9 @@ class BullyAlgorithm:
         message_type = message['type']
         
         if message_type == 'election':
-            self.handle_election_message(sender_pid, addr)
+            self.handle_election_message(sender_pid)
         elif message_type == 'coordinator':
-            self.handle_coordinator_message(sender_pid, addr)
+            self.handle_coordinator_message(addr)
 
     def handle_election_message(self, sender_pid):
         if sender_pid < self.sharedVar.pid:
