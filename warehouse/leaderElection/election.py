@@ -38,9 +38,9 @@ class BullyAlgorithm:
             self.handle_coordinator_message(sender_pid, addr)
 
     def handle_election_message(self, sender_pid):
-        if sender_pid < self.process_id:
-            for host in self.hosts:
-                self.send_message(host, {'type': 'election', 'addresse': self.ip, 'pid': self.process_id})
+        if sender_pid < self.sharedVar.pid:
+            for host in self.sharedVar.hosts:
+                self.send_message(host, {'type': 'election', 'addresse': self.sharedVar.ip, 'pid': self.sharedVar.pid})
             time.sleep(3)
             if self.sharedVar.leader is None:
                 for host in self.sharedVar.hosts.keys():
