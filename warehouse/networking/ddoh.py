@@ -90,6 +90,11 @@ class Networking:
                     self.sharedVar.hosts[addr[0]] = datetime.now()
                     RESPONSE_MESSAGE = {'type': "discovered", 'addresse':self.ip, "foreignAdress":message["addresse"], "hosts": self.sharedVar.hosts}
                     response_socket.sendto(pickle.dumps(RESPONSE_MESSAGE), addr)
+                elif self.sharedVar.leader == self.ip and  "type" in message.keys() and message["type"] == "client":
+                    RESPONSE_MESSAGE = {'type': "servers", 'addresse':self.ip, "foreignAdress":addr[0], "hosts": self.sharedVar.hosts}
+                    logging.debug(f"Send {RESPONSE_MESSAGE}")
+                    response_socket.sendto(pickle.dumps(RESPONSE_MESSAGE), addr)
+                    
 
 
         finally:

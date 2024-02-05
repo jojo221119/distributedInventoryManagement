@@ -6,12 +6,14 @@ class Log:
         entry = {
             "message": message,
             "commit": False,
-            "acknowledgedBy": []
+            "acknowledgedBy": [],
+            "response": {"type": "Error"}
         }
         self.log[message["seq"]] = entry
     
-    def commitMessage(self, message):
+    def commitMessage(self, message, response):
         self.log[message["seq"]]["commit"] = True
+        self.log[message["seq"]]["response"] = response
     
     def acknowledgeMessage(self, message):
         sender = message["sender"]
@@ -35,3 +37,6 @@ class Log:
     
     def removeMessage(self,message):
         del self.log[message["seq"]]
+    
+    def getResponse(self,message):
+        return self.log[message["seq"]]["response"]

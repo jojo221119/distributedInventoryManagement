@@ -16,6 +16,6 @@ WORKDIR /app/
 
 COPY . /app/
 
-EXPOSE ${PORT}
+EXPOSE 8082
 
 ENTRYPOINT ["python"]

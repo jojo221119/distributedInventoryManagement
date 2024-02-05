@@ -1,9 +1,22 @@
+import logging
 from flask import Flask, render_template, request, redirect
 from flask_bootstrap import Bootstrap5
 
 from flask_wtf import FlaskForm, CSRFProtect
 from wtforms import StringField, IntegerField, SubmitField
 from wtforms.validators import DataRequired, Length
+
+from serverAPI.serverAPI import ServerAPI
+
+# Configure logging
+logging.basicConfig(
+    level=logging.DEBUG,  # Set the desired logging level
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    handlers=[
+        logging.StreamHandler()  # Log to the console
+        # Add additional handlers or specify a file to log to
+    ]
+)
 
 app = Flask(__name__)
 # this does not actually belong in a git but since this is uni project..
@@ -13,6 +26,8 @@ app.secret_key = 'ksdh&f|HeuWIW0?$'
 bootstrap = Bootstrap5(app)
 # Flask-WTF requires this line
 csrf = CSRFProtect(app)
+
+serverAPI = ServerAPI()
 
 class ItemForm(FlaskForm):
     item_id = IntegerField('Item ID', validators=[DataRequired()])
@@ -35,16 +50,16 @@ class ItemModel():
 def index():
     form = ItemForm()
     if request.method == 'POST':
-        # Not sure what post request we want to give the custumer but lets make him create a new item
         if form.validate_on_submit():
-            item1 = ItemModel(1, "Schraube", "Kann was festhalten", 25)
-            item2 = ItemModel(2, "Kugellager", "Kann Kugeln lagern", 10)
-            item3 = ItemModel(3, "Lufthaken", "Für Azubis", 1)
-            item4 = ItemModel(4, "Platte", "Eine normale Platte", 1)
-            items = [item1, item2, item3, item4]
+            message = {"type":"newItem", "name": form.name.data, "description": form.description.data}
+            response = serverAPI.sendMessageToServer(message)
 
-            new_item = ItemModel(item_id=form.item_id.data, name=form.name.data, description=form.description.data, amount=form.amount.data)
-            items.append(new_item)
+            message = {"type":"listItems"}
+            response = serverAPI.sendMessageToServer(message)
+            items = []
+            if response["type"] == "ItemList":
+                items = [ItemModel(item_id=int(item['item_id']), name=item['name'], description=item['description'], amount=item['amount']) for item in response["items"]]
+                app.logger.info(f"{items}")
             return render_template('client_index.html', form=form, items=items)
         else:
             return redirect('/')
@@ -53,29 +68,33 @@ def index():
 
 
     else:
-        # items are created statically
-        item1 = ItemModel(1, "Schraube", "Kann was festhalten", 25)
-        item2 = ItemModel(2, "Kugellager", "Kann Kugeln lagern", 10)
-        item3 = ItemModel(3, "Lufthaken", "Für Azubis", 1)
-        item4 = ItemModel(4, "Platte", "Eine normale Platte", 1)
-        items = [item1, item2, item3, item4]
-        # TODO: here the amount of items need to be requested from server
-
+        message = {"type":"listItems"}
+        response = serverAPI.sendMessageToServer(message)
+        items = []
+        if response["type"] == "ItemList":
+            items = [ItemModel(item_id=int(item['item_id']), name=item['name'], description=item['description'], amount=item['amount']) for item in response["items"]]
+            app.logger.info(f"{items}")
         return render_template('client_index.html', form=form, items=items)
 
 
 @app.route('/buy/<int:id>')
 def buy(id):
     # TODO: Update ofc
+    #message = {"type":"buyItem", "itemId": id, "amount": amount}
+    #response = serverAPI.sendMessageToServer(message)
+    # from Server response = {"type": "amount", "itemId": message["itemId"], "amount": amount}
     return("implement this")
 
 @app.route('/sell/<int:id>', methods=['GET', 'POST'])
 def sell(id):
     # TODO: Update ofc
+    #message = {"type":"sellItem", "itemId": id, "amount": amount}
+    #response = serverAPI.sendMessageToServer(message)
+    # from Server response = {"type": "amount", "itemId": message["itemId"], "amount": amount}
     return("implement this")
 
 # if we ever need an errorhandler
 #@app.errorhandler(404)
 
 if __name__ == '__main__':
-    app.run(debug=True, port=8082)
+    app.run(debug=False, port=8082,host="0.0.0.0")

@@ -1,13 +1,12 @@
+from datetime import datetime, timedelta
 import json
 
 import logging
-import queue
 import socket
 import struct
-import sys
-import threading
 from time import sleep
-import platform
+
+from serverLogic.inventory import Inventory
 from .log import Log
 from .message import Message
 
@@ -16,16 +15,14 @@ logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %
 
 class ReliableMulticaster:
 
-    def __init__(self, multicastGroupIp, port, id, leaderId, groupSize, deliveryQueue):
+    def __init__(self, multicastGroupIp, port, sharedVar, inventory):
+        self.sharedVar = sharedVar
         self.port = port
         self.groupIp = multicastGroupIp
-        self.delivery_queue = deliveryQueue
-        self.leader = leaderId
+        self.inventory = inventory
         self.holdback_queue = {}
         self.seq = 0
-        self.id = id
         self.log = Log()
-        self.groupSize = groupSize
 
     def setup(self):
         multicast_group = (self.groupIp, self.port)
@@ -59,60 +56,62 @@ class ReliableMulticaster:
 
         data, _ = self.sock.recvfrom(1024)
         message = json.loads(data.decode())
-        if message['sender'] != myid:
-            logging.debug(f"Received message from {message['sender']}: {message}")
+#        if message['sender'] != self.sharedVar.ip:
+        logging.debug(f"Received message from {message['sender']}: {message}")
+        
+        if message["type"] == "message":
+            self.__receiveMessage(message)
+        elif self.sharedVar.leader == self.sharedVar.ip:
+            if message["type"] == "ack":
+                self.__receiveAcknowledge(message)
+            elif message["type"] == "missing":
+                self.__receiveMissing(message)
+
+
+        elif message["type"] == "commit":
+            logging.debug(f"Received commit message")
+            self.__receiveCommit(message)
+
             
-            if self.leader == self.id:
-                if message["type"] == "ack":
-                    self.__receiveAcknowledge(message)
-                elif message["type"] == "missing":
-                    self.__receiveMissing(message)
-
-
-            elif message["type"] == "commit":
-                logging.debug(f"Received commit message")
-                self.__receiveCommit(message)
-
-            elif message["type"] == "message":
-                self.__receiveMessage(message)
-            
-            elif message["type"] == "abort":
-                self.__receiveAbort(message)
+        elif message["type"] == "abort":
+            self.__receiveAbort(message)
 
 
     def sendMessage(self, content):
         self.seq += 1
-        m = Message(seq=self.seq, sender=myid, content=content, type="message")
+        m = Message(seq=self.seq, sender=self.sharedVar.ip, content=content, type="message")
         self.log.addMessage(m)
-        self.log.acknowledgeMessage(m)
         self.__send_multicast_message(m)
 
         for i in range(3):
-            sleep(5)
-            if not self.log.isMessageCommited(m):
-                if i < 2:
-                    self.__send_multicast_message(m)
-                else:
-                    m = Message(seq=self.seq, sender=myid, content="", type="abort")
-                    self.__send_multicast_message(m)
-                    self.log.removeMessage(m)
-                    self.seq -= 1
-                    logging.debug(f"Abort message {m}")
-                return False
+            t = datetime.now()
+            while t < datetime.now()-timedelta(seconds=5):
+                if self.log.isMessageCommited(m):
+                    return self.log.getResponse(m)
+            
+            if i < 2:
+                self.__send_multicast_message(m)
             else:
-                return True
+                m = Message(seq=self.seq, sender=self.sharedVar.ip, content="", type="abort")
+                self.__send_multicast_message(m)
+                self.log.removeMessage(m)
+                self.seq -= 1
+                logging.debug(f"Abort message {m}")
+                return self.log.getResponse(m)
+
+
             
     
     def __sendCommit(self, seq):
-        m = Message(seq=seq, sender=myid, content="", type="commit")
+        m = Message(seq=seq, sender=self.sharedVar.ip, content="", type="commit")
         self.__send_multicast_message(m)
 
     def __sendAcknowledge(self, seq):
-        m = Message(seq=seq, sender=myid, content="", type="ack")
+        m = Message(seq=seq, sender=self.sharedVar.ip, content="", type="ack")
         self.__send_multicast_message(m)
 
     def __sendMissing(self,lastReceivedSeq):
-        m = Message(seq=None, sender=myid, content=f"{self.seq + 1},{lastReceivedSeq}", type="missing")
+        m = Message(seq=None, sender=self.sharedVar.ip, content=f"{self.seq + 1},{lastReceivedSeq}", type="missing")
         self.__send_multicast_message(m)
 
 
@@ -136,8 +135,8 @@ class ReliableMulticaster:
     def __receiveAcknowledge(self, message):
         if self.log.messageInLog(message):
             ackCount = self.log.acknowledgeMessage(message)
-            logging.debug(f"AckCount {ackCount}, Quorum {int(self.groupSize)} reached {ackCount >= (int(self.groupSize))}")
-            if ackCount >= int(self.groupSize):
+            logging.debug(f"AckCount {ackCount}, Quorum {len(self.sharedVar.hosts.keys())} reached {ackCount >= len(self.sharedVar.hosts.keys())}")
+            if ackCount >= len(self.sharedVar.hosts.keys()):
                 self.__sendCommit(message["seq"])
                 if not self.log.isMessageCommited(message):
                     self.__commitMessageAndForwardContent(message)
@@ -153,63 +152,7 @@ class ReliableMulticaster:
 
     def __commitMessageAndForwardContent(self,message):
         seq = message["seq"]
-        self.log.commitMessage(message)
         m = self.log.getMessage(seq)
         logging.debug(f"Deliver message {m}")
-        delivery_queue.put(m["content"])
-
-
-def myTimer(seconds, deliveryQueue):
-    while True:
-        sleep(seconds)
-#        if deliveryQueue.empty():
-#            logging.debug("Waiting for delivery")
-#        else:    
-        logging.info(f"Processed {deliveryQueue.get()}")
-
-
-
-if __name__ == "__main__":
-
-    myid = platform.node()
-    #str(uuid.uuid4())
-    quorum = 1
-
-    
-    
-    if len(sys.argv) > 1 and sys.argv[1] == "leader":
-        leaderId = myid
-    else:
-        leaderId = "leader"
-
-    logging.debug(f"My ID: {myid}")
-    logging.debug(f"Leader ID: {leaderId}")
-
-    groupSize = 3
-
-    delivery_queue = queue.Queue()
-    client = ReliableMulticaster('224.0.0.1', 10000, myid, leaderId, groupSize, delivery_queue)
-
-    clientThread = threading.Thread(target=client.start, daemon=True)
-
-    for thread in [clientThread]:
-        thread.start()
-
-
-
-    # Thread that will sleep in background and call your function
-    # when the timer expires.
-    myThread = threading.Thread(target=myTimer, args=(5,delivery_queue,))
-    myThread.start()
-    
-    while True:
-        if leaderId == myid:
-            for i in range(1,1000):
-                input("Enter message to multicast: \n") 
-                client.sendMessage(f"test{i}")
-            
-            #message =            
-            #client.sendMessage(message)
-
-    for thread in [clientThread]:
-        thread.join()
+        response = self.inventory.processMessage(m["content"])
+        self.log.commitMessage(message,response)
