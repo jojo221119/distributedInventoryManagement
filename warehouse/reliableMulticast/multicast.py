@@ -85,19 +85,20 @@ class ReliableMulticaster:
 
         for i in range(3):
             t = datetime.now()
-            while t < datetime.now()-timedelta(seconds=5):
+            while t > datetime.now()-timedelta(seconds=5):
                 if self.log.isMessageCommited(m):
                     return self.log.getResponse(m)
-            
+            logging.debug(i)
             if i < 2:
                 self.__send_multicast_message(m)
             else:
                 m = Message(seq=self.seq, sender=self.sharedVar.ip, content="", type="abort")
                 self.__send_multicast_message(m)
+                response = self.log.getResponse(m)
                 self.log.removeMessage(m)
                 self.seq -= 1
                 logging.debug(f"Abort message {m}")
-                return self.log.getResponse(m)
+                return response
 
 
             

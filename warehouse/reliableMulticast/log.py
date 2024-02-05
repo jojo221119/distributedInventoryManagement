@@ -1,3 +1,6 @@
+import logging
+
+
 class Log:
     def __init__(self):
         self.log = {}
@@ -39,4 +42,7 @@ class Log:
         del self.log[message["seq"]]
     
     def getResponse(self,message):
-        return self.log[message["seq"]]["response"]
+        if message["seq"] in self.log:
+            return self.log[message["seq"]]["response"]
+        else:
+            return {"type": "Error"}
