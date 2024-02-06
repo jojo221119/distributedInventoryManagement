@@ -16,7 +16,7 @@ class Inventory():
             return []
 
     def save_inventory(self):
-        data = [{'id': item.item_id, 'name': item.name, 'description': item.description, 'amount': item.amount}
+        data = [{'item_id': item.item_id, 'name': item.name, 'description': item.description, 'amount': item.amount}
                 for item in self.items]
         with open(self.filename, 'w') as file:
             json.dump(data, file, indent=2)
