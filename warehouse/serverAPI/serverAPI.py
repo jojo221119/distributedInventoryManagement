@@ -50,6 +50,7 @@ class ServerAPI:
 
     def sendMessageToServer(self, message):
         hosts = self.__getServerIPs()
+        logging.debug(f"{hosts}")
         if len(hosts) < 1:
             return {"type": "Error"}
         server_host = hosts[0]

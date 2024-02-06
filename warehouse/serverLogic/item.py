@@ -1,8 +1,5 @@
 import logging
 
-
-
-
 class Item:
     def __init__(self, item_id, name, description, amount):
         self.item_id = item_id

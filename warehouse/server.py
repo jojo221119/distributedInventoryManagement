@@ -1,26 +1,19 @@
 from datetime import datetime, timedelta
 import logging
-import os
 import pickle
-import queue
-import random
+import selectors
 import socket
 import threading
-from time import sleep
-
-from flask import Flask
-from flask_restful import Api
 
 
 from serverLogic.inventory import Inventory
-from serverLogic.item import Item
 from networking.ddoh import Networking
 from sharedVars.shared import Shared
 from heartbeat.heartbeat import HeartBeat
 from reliableMulticast.multicast import ReliableMulticaster
 from leaderElection.election import BullyAlgorithm
 
-# Configure the logging settings
+
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
 
@@ -58,35 +51,49 @@ def main():
     sharedVar.leader = net.discover_hosts()   
 
 
-
-
-
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     server_socket.bind(('', 12347))
+    server_socket.setblocking(False)
 
+    sel = selectors.DefaultSelector()
+    sel.register(server_socket, selectors.EVENT_READ, data=None)
 
     t = datetime.now()
     logging.info("Start Main")
-    logging.debug(f"State IP: {sharedVar.ip} leader: {sharedVar.leader} election: {sharedVar.election_in_progress} hosts: {sharedVar.hosts.keys()}")
-    logging.debug(f"Inventory {inventory}")
+    logging.debug(f"State IP: {sharedVar.ip} leader: {sharedVar.leader} election: {sharedVar.election_in_progress} seq: {multicast.seq} hosts: {list(sharedVar.hosts.keys())}")
     while True:
         
         if t < datetime.now()-timedelta(seconds=5):
-            logging.debug(f"State IP: {sharedVar.ip} leader: {sharedVar.leader} election: {sharedVar.election_in_progress} hosts: {sharedVar.hosts.keys()}")
-            logging.debug(f"Inventory {inventory}")
+            logging.debug(f"State IP: {sharedVar.ip} leader: {sharedVar.leader} election: {sharedVar.election_in_progress} seq: {multicast.seq} hosts: {list(sharedVar.hosts.keys())}")
             t = datetime.now()
         
 
         if sharedVar.leader not in sharedVar.hosts.keys() and not sharedVar.election_in_progress:
             election.start_election()
+        
+        while sharedVar.election_in_progress:
+            i = 1
+        
 
+        events = sel.select(timeout=0)
+        for key, mask in events:
+            if mask & selectors.EVENT_READ:
+                data, address = server_socket.recvfrom(1024)
+                message = pickle.loads(data)
+                if sharedVar.leader == sharedVar.ip:
+                    response = multicast.sendMessage(message)
+                else:
+                    udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+                    udp_socket.bind(('', 0))
+                    leader_address = (sharedVar.leader, 12347)
+                    logging.debug(f"Forward message to leader")
+                    udp_socket.sendto(pickle.dumps(message), leader_address)
 
-        data, address = server_socket.recvfrom(1024)
-        message = pickle.loads(data)
-        if sharedVar.leader == sharedVar.ip:
-            response = multicast.sendMessage(message)
-            logging.debug(f"Response {response}")
-            server_socket.sendto(pickle.dumps(response), address) 
+                    r, _ = udp_socket.recvfrom(1024)
+                    response = pickle.loads(r)
+
+                logging.debug(f"Response {response}")
+                server_socket.sendto(pickle.dumps(response), address)
 
 
     heartBeatListener.join()

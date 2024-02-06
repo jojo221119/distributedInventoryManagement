@@ -44,17 +44,14 @@ class Networking:
         sleep(2)
 
     def discover_hosts(self):
-        # Create a UDP socket for broadcasting
         broadcast_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         broadcast_socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-        sleep(random.randrange(3,24,3))
+        sleep(random.randrange(3,32,4))
 
         try:
-            # Broadcast a discovery message
             DISCOVERY_MESSAGE = {'type': "discovery", 'addresse':self.ip}
             broadcast_socket.sendto(pickle.dumps(DISCOVERY_MESSAGE), (self.broadcastIp, DISCOVERY_PORT))
 
-            # Listen for responses
             broadcast_socket.settimeout(2)  # Timeout for listening (in seconds)
             while True:
                 data, addr = broadcast_socket.recvfrom(1024)
@@ -77,7 +74,6 @@ class Networking:
         return self.ip
 
     def respond_to_discovery(self):
-        # Create a UDP socket for responding to discovery messages
         response_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         response_socket.bind(('0.0.0.0', DISCOVERY_PORT))
 
@@ -99,23 +95,3 @@ class Networking:
 
         finally:
             response_socket.close()
-
-
-
-
-if __name__ == "__main__":
-    if len(sys.argv) > 1 and sys.argv[1] == "leader":
-        leader = True
-    else:
-        leader = False
-
-    ddoh = Networking(leader)
-    # Start a thread to respond to discovery messages
-    response_thread = threading.Thread(target=ddoh.respond_to_discovery)
-    response_thread.start()
-
-    # Discover hosts in the network
-    ddoh.discover_hosts()
-
-    # Wait for the response thread to finish
-    response_thread.join()

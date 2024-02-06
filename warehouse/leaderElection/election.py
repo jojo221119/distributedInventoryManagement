@@ -49,10 +49,10 @@ class BullyAlgorithm:
                     for host in list(self.sharedVar.hosts.keys()):
                         self.send_message(host, {'type': 'coordinator', 'addresse': self.sharedVar.ip, 'pid': self.sharedVar.pid})
                     self.sharedVar.leader = self.sharedVar.ip
+                    self.abortOwnElection = False
                     self.sharedVar.election_in_progress = False
 
     def handle_message(self, message, addr):
-        sender_pid = message['pid']
         message_type = message['type']
         
         if message_type == 'election':
@@ -70,9 +70,12 @@ class BullyAlgorithm:
 
     def handle_coordinator_message(self, sender_addresse):
         logging.debug(f"Received coordinator message Own IP: {self.sharedVar.ip} sender: {sender_addresse} result: {sender_addresse < self.sharedVar.ip}")
-        self.abortOwnElection = True
-        self.sharedVar.leader = sender_addresse
-        self.sharedVar.election_in_progress = False
+        if sender_addresse < self.sharedVar.ip:
+            self.start_election()
+        else:
+            self.abortOwnElection = True
+            self.sharedVar.leader = sender_addresse
+            self.sharedVar.election_in_progress = False
 
 
 

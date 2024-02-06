@@ -4,9 +4,7 @@ import json
 import logging
 import socket
 import struct
-from time import sleep
 
-from serverLogic.inventory import Inventory
 from .log import Log
 from .message import Message
 
@@ -56,7 +54,6 @@ class ReliableMulticaster:
 
         data, _ = self.sock.recvfrom(1024)
         message = json.loads(data.decode())
-#        if message['sender'] != self.sharedVar.ip:
         logging.debug(f"Received message from {message['sender']}: {message}")
         
         if message["type"] == "message":
@@ -69,7 +66,6 @@ class ReliableMulticaster:
 
 
         elif message["type"] == "commit":
-            logging.debug(f"Received commit message")
             self.__receiveCommit(message)
 
             
@@ -119,7 +115,7 @@ class ReliableMulticaster:
     def __receiveMissing(self, message):
         numbers = message["content"].split(",")
         
-        for i in range(int(numbers[0]), int(numbers[1])):
+        for i in range(int(numbers[0]), int(numbers[1])+1):
             m = self.log.getMessage(i)
             self.__send_multicast_message(m)
 
