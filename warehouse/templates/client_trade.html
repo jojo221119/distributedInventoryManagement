@@ -1,0 +1,38 @@
+{% extends 'client_base.html' %}
+{% from 'bootstrap5/form.html' import render_form %}
+
+{% block title %}
+Warehouse
+{% endblock %}
+
+{% block body %}
+<div class="content">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">Warehouse - Client</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link active" aria-current="page" href="#">Trade</a>
+                    </li>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-xxl">
+        {% for mesg in get_flashed_messages() %}
+        <div class="alert alert-success" role="alert">
+            {{ mesg }}
+        </div>
+        {% endfor %}
+  
+          
+        <h1>Trade an item</h1>
+        {{ render_form(trade_form) }}
+
+    </div>
+</div>
+{% endblock %}
