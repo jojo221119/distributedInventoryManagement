@@ -1,5 +1,6 @@
 import logging
 import pickle
+import random
 import socket
 import netifaces
 
@@ -53,7 +54,9 @@ class ServerAPI:
         logging.debug(f"{hosts}")
         if len(hosts) < 1:
             return {"type": "Error"}
-        server_host = hosts[0]
+        length = len(hosts)
+        randHost = random.randint(0,length)
+        server_host = hosts[randHost]
         server_port = 12347
 
         client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
