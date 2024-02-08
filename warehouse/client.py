@@ -76,12 +76,6 @@ def index():
         message = {"type":"listItems"}
         response = serverAPI.sendMessageToServer(message)
         items = []
-        # items are created statically
-        item1 = ItemModel(1, "Schraube", "Kann was festhalten", 25)
-        item2 = ItemModel(2, "Kugellager", "Kann Kugeln lagern", 10)
-        item3 = ItemModel(3, "Lufthaken", "Für Azubis", 1)
-        item4 = ItemModel(4, "Platte", "Eine normale Platte", 1)
-        items = [item1, item2, item3, item4]
         if response["type"] == "ItemList":
             items = [ItemModel(item_id=int(item['item_id']), name=item['name'], description=item['description'], amount=item['amount']) for item in response["items"]]
             app.logger.info(f"{items}")
