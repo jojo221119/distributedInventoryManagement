@@ -21,9 +21,9 @@ class Inventory():
         with open(self.filename, 'w') as file:
             json.dump(data, file, indent=2)
 
-    def addItem(self,name,description):
+    def addItem(self,name,description,amount):
         item_id = int(max(self.items, key=lambda x: x.item_id).item_id) + 1
-        item = Item(item_id=item_id,name=name,description=description,amount=0)
+        item = Item(item_id=item_id,name=name,description=description,amount=amount)
         self.items.append(item)
         self.save_inventory()
         return item_id
@@ -62,7 +62,7 @@ class Inventory():
         response = {"type": "Error"}
 
         if message["type"] == "newItem":
-            id = self.addItem(message["name"],message["description"])
+            id = self.addItem(message["name"],message["description"],message["amount"])
             response = {"type":"NewItem", "itemId":id}
         elif message["type"] == "listItems":
             items = self.getItems()
