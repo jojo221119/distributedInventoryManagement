@@ -1,15 +1,24 @@
-\chapter{Component Description} \label{ch:ComponentDescription}
+\chapter{Component Description}\label{ch:ComponentDescription}
 
-\chapter{Node} \label{ch:Node}
-Each node in the system will check on startup if there are other nodes already running within the network. This is done via a broadcast message containing the nodes ID and IP Address. 
+\chapter{Node}\label{ch:Node}
+Each node in the system will check on startup if there are other nodes already running within the network. This is done via a broadcast message containing the nodes ID and IP Address. If after a timeout no host responded the system assumes it's the first node and becomes leader. If other systems are already active the leader responds to the broadcast with the current list of hosts, it's own IP (the leader IP). The new host updates its own host list with the information received from the leader and sets the leader IP address. 
 
-\section{Leader} \label{sec:Leader}
-We use the bully algorithm to determine a uniqe leader out of all nodes.
-The bully algorithm ensures that there is always a leader.
+Each node sends regularly heartbeats to all other nodes. It then checks if there are missed heartbeats from other nodes. If for a node the heartbeats are missed for to long it removes the host from the hosts list.
+If a node detects a failure of the leader a new election is started.
 
-The leader mostly behaves the same as all the other nodes. Additional tasks are maintaining the group-view and coordinating write operations.
+Each node listens for business requests from clients. If a business request is received by a host not being leader it forwards the request to the leader and waits for a response. Which is then forwarded to the requesting client.
 
-The group view is maintained by listening on broadcasts for new nodes and regularly checking if nodes in the group-view are still alive. The leader will accept the new server and distribute the updated group-view to all nodes. 
+\section{Leader}\label{sec:Leader}
+The first leader is determined by the first host in the system. 
+In case the leader fails a new leader is elected out of all nodes using the bully algorithm to determine a uniqe leader.
 
-As consistency is of high importance for the inventory system write operations are coordinated by the leader to ensure that all nodes have up-to-date information. 
+The leader behaves the same as all other nodes regarding heartbeat and processing of commited messages.
 
+In addition to the above the leader responds to broadcast messages from new hosts and clients with the current hosts list.
+
+Processes all business logic messages and distributes them using ordered reliable multicast to the other nodes. After a message is commited and processed the leader responds to the host which sent the message.
+
+
+
+\chapter{Client}\label{sec:Client}
+The client serves a web frontend to interact with the system. When a user triggers a business request the client requests all currently active hosts and sends the request to one of the active hosts and waits for a response. 
