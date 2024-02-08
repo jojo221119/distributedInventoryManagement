@@ -11,7 +11,7 @@ services:
     networks:
       - warehouse-network
     deploy:
-      replicas: 1
+      replicas: 3
 
   client:
     build: 

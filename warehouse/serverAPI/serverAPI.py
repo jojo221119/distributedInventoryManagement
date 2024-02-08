@@ -55,7 +55,7 @@ class ServerAPI:
         if len(hosts) < 1:
             return {"type": "Error"}
         length = len(hosts)
-        randHost = random.randint(0,length)
+        randHost = random.randint(0,length-1)
         server_host = hosts[randHost]
         server_port = 12347
 

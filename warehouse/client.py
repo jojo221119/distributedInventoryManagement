@@ -109,7 +109,7 @@ def sell(item_id):
     if request.method == 'POST':
         if trade_form.validate_on_submit():
             amount = trade_form.sell_amount.data
-            message = {"type":"sellItem", "itemId": id, "amount": amount}
+            message = {"type":"sellItem", "itemId": item_id, "amount": amount}
             response = serverAPI.sendMessageToServer(message)
             flash(f"You sold {amount}")
             return redirect('/')
