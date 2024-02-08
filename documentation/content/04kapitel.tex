@@ -1,13 +1,44 @@
 \chapter{Discussion}\label{ch:Discussion}
-\section{Fail Stop}\label{sec:Fail Stop}
-\textbf{Luca}
 \section{Crash}\label{sec:Crash}
-\textbf{Luca}
+As mentioned in section \ref{sec:FaultTolerance} our system is able to handle the crash of a server node, as well as the crash of the leader node. The procedure of the crashes differs, whether a node dies, or the leader dies.In case of a node dying, the system
+can operate as if nothing happens. Internally the other servers realize, that there is no heartbeat of the dead node, After 2 seconds without a heartbeat, the server node is taken out from the cluster and in the meantime the system operates as usual. The benefit of this
+approach is, that there is no downtime at all. But it can happen, that a request from a client is not registered and it has to be requested again, in order to handle the change.
+
+A slightly different approach takes place, when the leader dies. In that case the system is not operational, until a new leader is elected. As soon as a node realizes the death of the leader, the election will be started and a new leader will be chosen. This
+ensures strong consistency, even without the leader but at the cost of a little downtime, where the requests from the clients will be paused, until the new leader is operational. Requests that are already placed but not finished, will be lost in order
+to keep the system consistent, therefore the user has to place the requests again.
+
+\section{Fail Stop}\label{sec:Fail Stop}
+Fail Stop is the stop of a system, if a node/component is not operational. One of the primary advantages of fail-stop lies in its simplicity and predictability. When a component or node within a distributed system fails, it halts all operations immediately and unequivocally. This clear-cut behavior simplifies fault detection and recovery processes, as the failed component can be swiftly identified and isolated without ambiguity. Consequently, fail-stop facilitates efficient fault management strategies, minimizing downtime and enabling rapid system restoration. 
+
+However, fail-stop is not without its limitations and disadvantages. One notable drawback is the potential for abrupt service disruptions and loss of progress. Since fail-stop entails an immediate cessation of operations upon failure, ongoing tasks or transactions may be abruptly terminated, leading to potential data loss or service interruptions. This characteristic can be disruptive, particularly in scenarios where the system's continuity and uninterrupted operation are paramount.
+
+In order to fullfill our strong consistency, we did not implement an fail stop procedure. But with the crash handling as described in \ref{sec:Crash}, the other nodes will notice a failure and take over the ongoing operations.
 \section{Byzantine}\label{sec:Byzantine}
-\textbf{Luca}
+\ac{BFT} protects the system from malicious attacks. Derived from the Byzantine Generals' Problem, which illustrates the challenge of achieving 
+consensus among mutually distrustful parties, BFT mechanisms fortify distributed systems by enabling them to operate seamlessly even in the presence of faulty or malicious nodes.
+The Duality of Byzantine Fault Tolerance: A Double-Edged Sword
+
+Byzantine Fault Tolerance (BFT) embodies a dual nature in the realm of distributed systems, presenting both positive and negative aspects to its implementation. This essay explores the dichotomy of BFT, highlighting its benefits and drawbacks in ensuring the reliability and integrity of distributed systems.
+
+On the positive side, the implementation of BFT brings forth a robust defense mechanism against malicious attacks and system failures. BFT algorithms enable distributed nodes to coordinate and reach consensus, even in the presence of Byzantine faults. This capability ensures the integrity and consistency of the system, enhancing its resilience against adversarial conditions.
+
+Moreover, BFT offers fault isolation and containment mechanisms, minimizing the impact of faulty or malicious nodes on the overall system. By detecting and isolating Byzantine faults, BFT prevents the spread of disruptive influences, thus maintaining the operational continuity of distributed systems. This aspect of BFT is crucial for ensuring system reliability and availability, especially in critical applications where uninterrupted operation is paramount.
+
+However, the implementation of BFT also comes with inherent challenges and drawbacks. One notable negative aspect is the increased communication overhead associated with consensus protocols. BFT algorithms typically require multiple rounds of message exchanges among nodes to achieve agreement, resulting in elevated network traffic and latency. This overhead can impact the performance and scalability of distributed systems, particularly in large-scale environments or under high network load conditions.
+
+Furthermore, achieving Byzantine Fault Tolerance often involves a trade-off between fault tolerance and system efficiency. While BFT mechanisms excel in ensuring fault tolerance and resilience, they may introduce complexities and resource overheads that can hinder system performance and scalability.
+
+In our case we decided, that we do not any sort of \ac{BFT} to have higher speed. The procedure we use to ensure strong consistency is already slowing down the system. In production and widely used system, implementing \ac{BFT} is crucial concerning the security.
 \section{Voting}\label{sec:Voting}
-\textbf{Luca}
+In order to select a leader as described in \ref{sec:ArchitecturalDescription}, a voting strategy is crucial. We chose the bully Algorithm to vote for a leader. In this algorithm, any node can start the election, but the node with the highest ID, whatever ID is chosen (e.g. \ac{UUID} or IP Address), will win 
+the election by \enquote{bullying} the nodes with a lower ID. If the comparison with any other ID is greater instead of greater or equal, if two nodes have the same ID, the node which voted first will win.
+
+The Bully Algorithm provides a decentralized approach to electing a leader in a distributed system. By allowing nodes to autonomously determine the leader without relying on a central authority, the Bully Algorithm enhances system resilience and scalability. This decentralized nature ensures that the system remains operational even if certain nodes fail or become unreachable, thereby improving fault tolerance and system robustness.
+
+However, one limitation of the Bully Algorithm is its susceptibility to network partitioning or communication failures. In scenarios where network partitions occur, nodes may incorrectly elect multiple leaders within different partitions, leading to inconsistencies and conflicts within the system. Additionally, if communication failures prevent nodes from exchanging messages during the leader election process, the algorithm may result in delays or failures to elect a leader, compromising the system's responsiveness and reliability.
+
+We chose the Bully Algorithm for its decentralized approach to leader election, enhancing fault tolerance and scalability in distributed systems. As a bigger System is developped, an other algorithm should be implemented due to factors such as scalability limitations, susceptibility to network partitions, and the need for more complex fault tolerance mechanisms tailored to their specific requirements and workload characteristics.
+
 \section{Ordered Reliable Multicast}\label{sec:OrderedReliableMulticast}
 \textbf{Johannes}
-\section{Dynamic Discovery of Hosts}\label{sec:DynamicDiscoveryofHosts}
-\textbf{Luca}

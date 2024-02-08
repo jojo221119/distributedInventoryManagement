@@ -1,7 +1,8 @@
 \chapter{Project Requirement Analysis}\label{ch:ProjectRequirementAnalysis}
 \section{Architectural Description}\label{sec:ArchitecturalDescription}
-\textbf{Luca}
-Client-Server Architecture: Our system will adopt a client-server model, which consists of multiple clients interfacing with a cluster of server nodes. The clients are responsible for querying current stock levels and submitting updates for processing. The server nodes serve these stock level requests and manage inventory updates. Amongst the server nodes, a leader will be elected to coordinate updates and ensure consistency across the distributed system.
+Client-Server Architecture: Our system will adopt a client-server model as seen in figure \ref{fig:architecture}, which consists of multiple clients interfacing with a cluster of server nodes. The clients are responsible for querying current stock levels and submitting updates for processing. The server nodes serve these stock level requests and manage inventory updates. Amongst the server nodes, a leader will be elected to coordinate updates and ensure consistency across the distributed system. 
+Our main focus is the strong consistency, therefore if a new request is past from the client to a server, first the server reaches out to the leader, which will commit the change and pass it to all other servers. Writing requests are always 
+passed to the leader, before they take place. Reading requests can be handled from a server node, the leader is not involved in this actions. When the leader dies, no bussiness logic can happen, except for reading, before a new leader is chosen.
 
 \begin{figure}[h!]
         \includegraphics[height=10cm, width=18cm]{images/Architecture.png}
@@ -37,7 +38,7 @@ it will be removed from the list by every server, including the leader, so the n
 \section{Leader Election}\label{sec:Election}
 Consensus on Updates: Write operations, critical for inventory synchronisation, are managed by the leader node. Also new nodes which want to join the group exchange information with the leader. The election Algorithm will be the bully Algorithm.
 When an election is triggered (the heartbeat of the leader is missing), the first Server, which realises it, starts an election, using an ID as information multicastet to every other server. If another Server has an higher id, he claims to become the leader,
-\enquote{bullying} the server with a lower ID and denying his election. This will continue unitl the server with the highest ID wins the election. He then sends a message, declaring himself as new leader and the workflow can continue.
+\enquote{bullying} the server with a lower ID and denying his election. As ID we use the IP Address as string to compare. This will continue unitl the server with the highest ID wins the election. He then sends a message, declaring himself as new leader and the workflow can continue.
 
 \section{Ordered Reliable Multicast}\label{sec:OrderedReliableMulticast}
 Our system uses total ordered reliable multicast to ensure inventory updates, like purchases or sales, are processed sequentially and data consistency is maintained over all nodes. This also prevents that a host has outdated information. 
