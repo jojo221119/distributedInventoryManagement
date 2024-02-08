@@ -1,6 +1,5 @@
-\chapter{Component Description}\label{ch:ComponentDescription}
-
-\chapter{Node}\label{ch:Node}
+\chapter{ComponentDescription}\label{ch:Component Description}
+\section{Node}\label{Node}
 Each node in the system will check on startup if there are other nodes already running within the network. This is done via a broadcast message containing the nodes ID and IP Address. If after a timeout no host responded the system assumes it's the first node and becomes leader. If other systems are already active the leader responds to the broadcast with the current list of hosts, it's own IP (the leader IP). The new host updates its own host list with the information received from the leader and sets the leader IP address. 
 
 Each node sends regularly heartbeats to all other nodes. It then checks if there are missed heartbeats from other nodes. If for a node the heartbeats are missed for to long it removes the host from the hosts list.
@@ -20,5 +19,7 @@ Processes all business logic messages and distributes them using ordered reliabl
 
 
 
-\chapter{Client}\label{sec:Client}
+\section{Client}\label{sec:Client}
 The client serves a web frontend to interact with the system. When a user triggers a business request the client requests all currently active hosts and sends the request to one of the active hosts and waits for a response. 
+
+\textbf{Patrick}
