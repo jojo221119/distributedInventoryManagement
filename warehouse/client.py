@@ -1,5 +1,5 @@
 import logging
-from flask import Flask, render_template, request, redirect
+from flask import Flask, render_template, request, redirect, flash
 from flask_bootstrap import Bootstrap5
 
 from flask_wtf import FlaskForm, CSRFProtect
@@ -30,14 +30,20 @@ csrf = CSRFProtect(app)
 serverAPI = ServerAPI()
 
 class ItemForm(FlaskForm):
-    item_id = IntegerField('Item ID', validators=[DataRequired()])
     name = StringField('Name', validators=[DataRequired(), Length(3, 15)])
     description = StringField('Description', validators=[DataRequired(), Length(10, 40)])
     amount = IntegerField('Amount', validators=[DataRequired()])
     submit = SubmitField('Add new item to warehouse')
 
+class BuyForm(FlaskForm):
+    buy_amount = IntegerField('Amount', validators=[DataRequired()])
+    submit = SubmitField('buy')
+
+class SellForm(FlaskForm):
+    sell_amount = IntegerField('Amount', validators=[DataRequired()])
+    submit = SubmitField('sell')
+
 # simple model so I can test stuff on the webpage
-# TODO: Change this
 class ItemModel():
     def __init__(self, item_id, name, description, amount):
         self.item_id = item_id # should be the primary key if it is desinged like a database
@@ -48,10 +54,11 @@ class ItemModel():
 
 @app.route('/', methods=['POST', 'GET'])
 def index():
-    form = ItemForm()
+    item_form = ItemForm()
     if request.method == 'POST':
-        if form.validate_on_submit():
-            message = {"type":"newItem", "name": form.name.data, "description": form.description.data}
+        if item_form.validate_on_submit():
+            # TODO Amount muss noch irgendwie in das item eingeplfegt werden?
+            message = {"type":"newItem", "name": item_form.name.data, "description": item_form.description.data}
             response = serverAPI.sendMessageToServer(message)
 
             message = {"type":"listItems"}
@@ -60,7 +67,7 @@ def index():
             if response["type"] == "ItemList":
                 items = [ItemModel(item_id=int(item['item_id']), name=item['name'], description=item['description'], amount=item['amount']) for item in response["items"]]
                 app.logger.info(f"{items}")
-            return render_template('client_index.html', form=form, items=items)
+            return render_template('client_index.html', item_form=item_form, items=items)
         else:
             return redirect('/')
 
@@ -71,27 +78,47 @@ def index():
         message = {"type":"listItems"}
         response = serverAPI.sendMessageToServer(message)
         items = []
+        # items are created statically
+        #item1 = ItemModel(1, "Schraube", "Kann was festhalten", 25)
+        #item2 = ItemModel(2, "Kugellager", "Kann Kugeln lagern", 10)
+        #item3 = ItemModel(3, "Lufthaken", "Für Azubis", 1)
+        #item4 = ItemModel(4, "Platte", "Eine normale Platte", 1)
+        #items = [item1, item2, item3, item4]
         if response["type"] == "ItemList":
             items = [ItemModel(item_id=int(item['item_id']), name=item['name'], description=item['description'], amount=item['amount']) for item in response["items"]]
             app.logger.info(f"{items}")
-        return render_template('client_index.html', form=form, items=items)
+        return render_template('client_index.html', item_form=item_form, items=items)
+
+@app.route('/buy/<int:item_id>', methods=['POST', 'GET'])
+def buy(item_id):
+    trade_form = BuyForm()
+    if request.method == 'POST':
+        if trade_form.validate_on_submit():
+            amount = trade_form.buy_amount.data
+            message = {"type":"buyItem", "itemId": item_id, "amount": amount}
+            response = serverAPI.sendMessageToServer(message)
+            flash(f"You bought {amount}")
+            return redirect('/')
+    else:
+        return render_template('client_trade.html', trade_form=trade_form)
 
 
-@app.route('/buy/<int:id>')
-def buy(id):
-    # TODO: Update ofc
-    #message = {"type":"buyItem", "itemId": id, "amount": amount}
-    #response = serverAPI.sendMessageToServer(message)
-    # from Server response = {"type": "amount", "itemId": message["itemId"], "amount": amount}
-    return("implement this")
+@app.route('/sell/<int:item_id>', methods=['GET', 'POST'])
+def sell(item_id):
+    trade_form = SellForm()
+    if request.method == 'POST':
+        if trade_form.validate_on_submit():
+            amount = trade_form.sell_amount.data
+            message = {"type":"sellItem", "itemId": id, "amount": amount}
+            response = serverAPI.sendMessageToServer(message)
+            flash(f"You sold {amount}")
+            return redirect('/')
+        else:
+            flash("Error filling out form")
+            return redirect('/')
+    else:
+        return render_template('client_trade.html', trade_form=trade_form)
 
-@app.route('/sell/<int:id>', methods=['GET', 'POST'])
-def sell(id):
-    # TODO: Update ofc
-    #message = {"type":"sellItem", "itemId": id, "amount": amount}
-    #response = serverAPI.sendMessageToServer(message)
-    # from Server response = {"type": "amount", "itemId": message["itemId"], "amount": amount}
-    return("implement this")
 
 # if we ever need an errorhandler
 #@app.errorhandler(404)
