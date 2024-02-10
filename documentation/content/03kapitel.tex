@@ -21,19 +21,15 @@ Processes all business logic messages and distributes them using ordered reliabl
 
 \section{Client}\label{sec:Client}
 The client is a web interface that can be used to interact with the warehouse system.
+Since only a handful of functions are needed, the interface was created using Flask, a micro web framework written in Python.
+Futhermore Bootstrap was used to create a simple but reliable user interface without the need of custom CSS.
+In addition, the interaction between the two components is simple and straightforward to implement.
 
-The interface was created with Flask, a micro web framework written in Python.
-
-Bootstrap was used for the simple design.
-
-It is a simple web framework that allows you to create a user-friendly web interface without a lot of custom CSS and interacting with Flask is easy.
-
-The website offers four functions on 3 pages: All available items are listed, items can be created, and items can be bought or sold. When using each of
-these functions, a request is first sent to all currently active hosts. 
-
-Then the requested information is sent to one of the active hosts and the response is awaited. 
+The interface offers four functions on three pages: All available items are listed, an item can be created, and items can be bought or sold. 
+Triggering a function causes the client to send a request to all currently active hosts. 
+An active host is selected at random.
+The requested information is then sent to this host and the response is awaited.
 
 The requests consist of a type that triggers which server routine is requested, 
-followed by the corresponding metadata that comes from the user via a form. 
-
-The forms already have validators so that the data does not have to be checked again.
+followed by the corresponding metadata, which comes from the user via a form. 
+The forms already have validators so that the data does not need to be checked again.
