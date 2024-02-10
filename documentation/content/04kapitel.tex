@@ -13,7 +13,9 @@ Fail Stop is the stop of a system, if a node/component is not operational. One o
 
 However, fail-stop is not without its limitations and disadvantages. One notable drawback is the potential for abrupt service disruptions and loss of progress. Since fail-stop entails an immediate cessation of operations upon failure, ongoing tasks or transactions may be abruptly terminated, leading to potential data loss or service interruptions. This characteristic can be disruptive, particularly in scenarios where the system's continuity and uninterrupted operation are paramount.
 
-In order to fullfill our strong consistency, we did not implement an fail stop procedure. But with the crash handling as described in \ref{sec:Crash}, the other nodes will notice a failure and take over the ongoing operations.
+In order to fullfill our strong consistency, we did not implement a dedicated fail stop procedure. But the server nodes will halt its operations if the leader is dead to prevent the creation of unconsistent data.
+
+
 \section{Byzantine}\label{sec:Byzantine}
 \ac{BFT} protects the system from malicious attacks. Derived from the Byzantine Generals' Problem, which illustrates the challenge of achieving 
 consensus among mutually distrustful parties, BFT mechanisms fortify distributed systems by enabling them to operate seamlessly even in the presence of faulty or malicious nodes.
