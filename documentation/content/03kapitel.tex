@@ -1,4 +1,4 @@
-\chapter{ComponentDescription}\label{ch:Component Description}
+\chapter{Component Description}\label{ch:ComponentDescription}
 \section{Node}\label{Node}
 Each node in the system will check on startup if there are other nodes already running within the network. This is done via a broadcast message containing the nodes ID and IP Address. If after a timeout no host responded the system assumes it's the first node and becomes leader. If other systems are already active the leader responds to the broadcast with the current list of hosts, it's own IP (the leader IP). The new host updates its own host list with the information received from the leader and sets the leader IP address. 
 
