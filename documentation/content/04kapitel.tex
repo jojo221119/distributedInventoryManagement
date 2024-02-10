@@ -46,7 +46,7 @@ We chose the Bully Algorithm for its decentralized approach to leader election, 
 Ordered reliable multicast provides a method to distribute information over a known set of nodes in a reliable manner and ensures ordering of the messages depending on the requirements. 
 If no ordering mechanism is implemented the message order might differ on the hosts for example caused by network delays. 
 
-An alternative order is first in first out (FIFO) in this case the order of the sender of the messages has to be ensured over all nodes. This can be achieved using vector clocks to track the sequence of messages for each node. Other order schemes are happened before relationships where it can be told if a message happened before an other message if they have a causal relationship but nothing can be said about messages which happened independent of each other. 
+An alternative order is \ac{FIFO} in this case the order of the sender of the messages has to be ensured over all nodes. This can be achieved using vector clocks to track the sequence of messages for each node. Other order schemes are happened before relationships where it can be told if a message happened before an other message if they have a causal relationship but nothing can be said about messages which happened independent of each other. 
 
 With Total order all messages over all nodes have the same order. To achieve this a central system is needed which generates the sequence e.g. by computing sequence numbers.
 
