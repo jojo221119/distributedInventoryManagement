@@ -8,10 +8,16 @@ services:
       context: ./warehouse
       dockerfile: Containerfile
     command: server.py
+    ports:
+      - 10000:10000
+      - 12345:12345
+      - 12346:12346
+      - 12347:12347
+      - 64000:64000
     networks:
       - warehouse-network
     deploy:
-      replicas: 3
+      replicas: 1
 
   client:
     build: 
