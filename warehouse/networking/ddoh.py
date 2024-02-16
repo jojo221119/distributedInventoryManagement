@@ -20,7 +20,7 @@ class Networking:
         self.interface = socket.getaddrinfo(host=socket.gethostname(), port=None, family=socket.AF_INET)
         self.ips = self.getAllIps()
         self.broadcastIp = self.ips[0][0]["broadcast"]
-        self.ip = socket.gethostbyname(socket.gethostname())
+        self.ip = self.extract_ip()
         self.sharedVar = sharedVar
 
     def getAllIps(self):
@@ -32,6 +32,18 @@ class Networking:
             if netifaces.AF_INET in iface_details:
                 ips.append(iface_details[netifaces.AF_INET])
         return ips
+    
+
+    def extract_ip(self):
+        st = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        try:
+            st.connect(("10.255.255.255", 1))
+            IP = st.getsockname()[0]
+        except Exception:
+            IP = "127.0.0.1"
+        finally:
+            st.close()
+        return IP
     
     def broadcast(self, message):
         logging.debug(f'sending on {self.ip}')
@@ -61,7 +73,8 @@ class Networking:
                     logging.debug(f"Discovered leader at {addr[0]}:{addr[1]}")
                     broadcast_socket.settimeout(None)
                     broadcast_socket.close()
-                    self.sharedVar.hosts = message["hosts"] 
+                    self.sharedVar.hosts = message["hosts"]
+                    self.sharedVar.leader = addr[0]
                     return addr[0]
 
         except socket.timeout:

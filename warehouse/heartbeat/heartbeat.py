@@ -3,8 +3,8 @@ import logging
 import pickle
 import time, socket
 
-TIMEOUTSEC = 3
-DEBUG = False
+TIMEOUTSEC = 5
+DEBUG = True
 
 class HeartBeat:
     def __init__(self, sharedVars) -> None:

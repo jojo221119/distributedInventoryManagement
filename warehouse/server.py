@@ -31,6 +31,8 @@ def main():
     sharedVar.ip = net.ip
     sharedVar.broadcastIP = net.broadcastIp
 
+    logging.debug(f"{sharedVar.broadcastIP}")
+
     heartBeat = HeartBeat(sharedVar)
     heartBeatListener = threading.Thread(target=heartBeat.receive)
     heartBeatSender = threading.Thread(target=heartBeat.send_heartbeat)
